@@ -1,0 +1,11 @@
+version: "1.0"
+services:
+  topic-classifier:
+    platform: linux/amd64
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/code
+    environment:
+      - OPENAI_API_KEY=my-key

@@ -1,0 +1,11 @@
+fastapi
+openai
+scikit-learn
+bertopic
+sentence-transformers
+umap-learn
+numpy
+transformers
+pandas
+datasets
+torch

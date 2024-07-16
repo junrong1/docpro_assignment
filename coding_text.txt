@@ -1,0 +1,31 @@
+Design and implement a simple AI-powered text analysis system that can perform one of the following tasks:
+
+Keyword Extraction: Identify and extract the most important keywords or phrases from a text.
+Text Summarization: Generate a concise summary of a longer text.
+Topic Classification: Categorize the text into predefined topics (e.g. sports, politics, technology, entertainment).
+
+Requirements:
+
+1. Use any programming language and libraries/frameworks/tools of your choice.
+2. Select one of the three tasks listed above.
+3. Create a simple API or command-line interface to interact with your system.
+4. Provide clear documentation on how to set up and use your system.
+5. Explain your approach, including any algorithms or models you chose and why.
+6. Discuss potential improvements or extensions to your system. For example, given enough time and resources, how would you boost the performance of the current system?
+(Optional) Demonstrate how you would evaluate your system.
+(Optional) Implement a simple front-end interface to showcase your system's capabilities.
+
+You have the freedom to decide on the specific implementation details, data sources, and models to use. We're interested in seeing how you approach the problem, structure your solution, and balance functionality with simplicity.
+
+Merits will be given for extraordinary performance in one or more of the following areas:
+
+- Deep insights into the application of models and algorithms
+- Software engineering practices
+- Systematic thinking (breaking down ambiguous problem statement into concrete and attackable sub-problems)
+
+You need not excel in all three areas; outstanding performance in any one of them will be appreciated and valued.
+You are recommended to allocate your time and expertise strategically.
+
+Please submit your code, documentation, and a brief write-up explaining your solution and thought process. Create a public GitHub repository for your submission. Send us the link by the end of this week (21st July, 2024).
+
+Good luck!

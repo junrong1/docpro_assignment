@@ -3,8 +3,13 @@ from typing import List
 from sentence_transformers import SentenceTransformer
 from umap import UMAP
 from bertopic import BERTopic
-from bertopic.representation import KeyBERTInspired
+from bertopic.representation import KeyBERTInspired, MaximalMarginalRelevance, OpenAI, PartOfSpeech
 import logging
+from sklearn.feature_extraction.text import CountVectorizer
+from bertopic.vectorizers import ClassTfidfTransformer
+from hdbscan import HDBSCAN
+import openai
+import os
 
 
 class UnsupervisedClassifier:
@@ -71,6 +76,82 @@ class UnsupervisedClassifier:
                         else:
                             topic_label.append("other")
         return topic_label
+
+    def gen_response(self, request: ClassifierRequest) -> ClassifierResponse:
+        return self._label_classifier(
+            request.query
+        )
+
+
+class UnsupervisedClassifierV2:
+
+    def __init__(self):
+        pass
+
+    def _label_classifier(self, content: List[str]) -> ClassifierResponse:
+        embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+        embeddings = embedding_model.encode(content, show_progress_bar=True, batch_size=32)
+
+        umap_model = UMAP(n_neighbors=15, n_components=5, min_dist=0.0, metric='cosine', random_state=42)
+        hdbscan_model = HDBSCAN(min_cluster_size=150, metric='euclidean', cluster_selection_method='eom',
+                                prediction_data=True)
+        vectorizer_model = CountVectorizer(stop_words="english", min_df=20, ngram_range=(1, 2))
+        ctfidf_model = ClassTfidfTransformer()
+
+        # KeyBERT
+        keybert_model = KeyBERTInspired()
+
+        # Part-of-Speech
+        pos_model = PartOfSpeech("en_core_web_sm")
+
+        # MMR
+        mmr_model = MaximalMarginalRelevance(diversity=0.3)
+
+        # GPT-3.5
+        client = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+        prompt = """
+        I have a topic that contains the following documents: 
+        [DOCUMENTS]
+        The topic is described by the following keywords: [KEYWORDS]
+
+        Based on the information above, extract a short but highly descriptive topic label of at most 3 words.
+        Please do not generate the label too specific, these are some example labels, for you to understand the principle
+        Example labels: Clothing and accessories, Household goods, Devices and electronics, Adult products 
+        Make sure it is in the following format:
+        topic: <topic label>
+        """
+        openai_model = OpenAI(client, model="gpt-4o", exponential_backoff=True, chat=True, prompt=prompt)
+
+        # All representation models
+        representation_model = {
+            "KeyBERT": keybert_model,
+            "OpenAI": openai_model,  # Uncomment if you will use OpenAI
+            "MMR": mmr_model,
+            "POS": pos_model
+        }
+
+        topic_model = BERTopic(
+
+            # Pipeline models
+            embedding_model=embedding_model,
+            umap_model=umap_model,
+            hdbscan_model=hdbscan_model,
+            vectorizer_model=vectorizer_model,
+            ctfidf_model=ctfidf_model,
+            representation_model=representation_model,
+
+            # Hyperparameters
+            top_n_words=10,
+            verbose=True
+        )
+
+        # Train model
+        topics, probs = topic_model.fit_transform(list(map(str, content)), embeddings)
+
+        # Filter outlier
+        new_topics = topic_model.reduce_outliers(content, topics, strategy="embeddings", embeddings=embeddings)
+        topic_labels = [topic_model.get_topic(x, full=True)["OpenAI"][0][0] for x in new_topics]
+        return ClassifierResponse(org_content=content, topics=topic_labels)
 
     def gen_response(self, request: ClassifierRequest) -> ClassifierResponse:
         return self._label_classifier(
